@@ -1,0 +1,81 @@
+3NF
+-----------------
+A relation R us 3BF if whenever A(i) - > B(j)
+
+Either
+--------------
+* left side is superkey, or 
+each B(j) is a plinil attribute
+
+Key: A1,A2 ... An is a key of relation R(L) of A1,A2,An - > L
+
+P attribute is an attribute that all eas in some key
+
+Superkey A1.... An is superkey of some of a A(i) are a key
+
+
+ex)
+R(A,B,C,D,E)
+---------------------------------------
+F1:AB -> C
+F2:AC - >B D
+F3:C-> B
+F4:A->D
+
+ACE->ABCDE
+ABE->ABCDE
+
+Step0
+keys
+-------
+{A,C,E}, {A,B,E}
+
+Step0 -> keys
+
+Step1 -> Find a minimum set of FDs - > Remove the F2 because it is reluctant.
+Table AC->BD
+{AC}^+ -> F1,F3,F4 = ABCD (BD) remove the F2 because it is duplicated reluctant
+C->B not reluctant
+
+Step 2 -> Define R1(A,B,C) , R3(B,C,) - REMOVED it does not require and duplication , R4(A,D)
+Just Define R1(A,B,C), R4(A,D)
+
+Step 3 -> Add    R4(A,B,E) 
+
+Lossless foin
+   	  R
+ 	/   \
+                R1  R2
+
+Dependency - Prose~
+Algorithm
+-------------
+Take R FD(functional dependency)
+------------------
+Output
+R1,R2 ......
+3NF
+loseless
+Dependency prose
+============================================
+FD for R1{A,B,C}
+{A}* = A,D
+{B}* = B
+{C}* = B,C
+{A,B}* = A,B,C,D
+{A,C}* = A, B, C, D (RELUCTANT -> REMOVED)
+{B,C}* = B,C  (RELUCTANT -> REMOVED)
+--------------------------------
+FDs for R1 
+C->B
+AB->C
+Key {A,B}
+----------------------------------
+FDs for R3 (A,D)
+{A}* = A D
+{D}* = D               A->D
+{A,D}* = A D (RELUCTANT -> REMOVED)
+==> A->D
+------------------------------------
+FD for ABE
+no Function dependency

@@ -1,0 +1,63 @@
+select distinct E.sid as "???" from enroll E
+where E.cnum not in (select C.num from course C where C. dept = 'cs');
+E go through the table and 
+??? - > students enrolled in a non CS courses
+
+(select S.id as "???" from student S)
+except
+(select E.sid from enroll E, course C where E.cnum = C.num and C.dept = 'cs');
+
+??? -> students enrolled in a no CS courses
+
+(select E.sid as "???"
+ from enroll E
+ where E.cnum in (select Cnum from course C where C.dept = 'cs'))
+except
+(select E.sid from
+ enroll E
+ where E.cnum not in (select C.num from course C where C.dept = 'cs'));
+
+??? -> Students only enrolled in CS courses.
+
+select E.sid, C.dept from enroll E, course C 
+where E.cnum = C.num;
+sid | dept
+--------------
+1        cs
+1        math
+2        math
+3        cs
+3        math
+
+/*
+insert into ages values (1,10);
+insert into ages values (2,9);
+insert into ages values (3,12);
+insert into ages values (4,9);
+*/
+
+select S.name from student S where
+(S.id, S.major) in (select E.sid, C.dept from enroll E, course C where E.cnum = C.num);
+name
+-----------
+eric
+john
+ellen
+
+select A.sid from ages A where A.age <= all (select A.age from ages A);
+sid (9 year old) youngest
+----------
+2
+4
+
+select A.sid from ages A where A.age < all (select A.age from ages A);
+--> none because nobody has less than own age
+
+select A.sid from ages A where A.age < some (select A.age from ages A);
+sid (at least 12 year old) 
+--------------
+1
+2
+4
+
+ 

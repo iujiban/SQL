@@ -1,0 +1,249 @@
+-----------------------------------------------------------------------------
+/*
+
+Definitions: 
+
+3NF. A relation R is in 3NF if whenever A1 A2 ... An --> B1 B2 ... Bm 
+is a non-trivial FD, either:
+  - the left side is a superkey, or 
+  - the right side consists of prime attributes only
+
+Trivial FD. An FD A1 A2 ... An --> B1 B2 ... Bm is trivial if 
+{B1, B2, ... ,Bm} is a subset of {A1, A2, ... ,An}
+
+Superkey: A set of attributes that contains a key is called a superkey.
+
+Key. The attributes {A1, A2, ... An} are a key if:
+  - they functionally determine all other attributes, and 
+  - no proper subset functionally determines all other attributes
+
+Prime attribute: An attribute that is a member of some key is called prime.
+
+*/
+
+-----------------------------------------------------------------------------
+-- Is the DB we have been using in 3NF?
+
+create table student (
+  sid int,
+  sname varchar(30),
+  major varchar(15),
+  year int,
+  primary key (sid)
+  );
+
+create table course (
+  cnum int,
+  cname varchar(20),
+  dept varchar(15),
+  primary key (cnum)
+  );
+
+create table enroll (
+  sid int,
+  cnum int,
+  grade varchar(2),
+  primary key (sid,cnum),
+  foreign key (sid) references student(sid),
+  foreign key (cnum) references course(cnum)
+  );
+
+/*
+
+First let's analyze FDs:
+
+sid        ->  sname, major, year
+cnum       ->  cname, dept
+sid, cnum  ->  grade
+
+In each case, the left side is a key. Good!
+
+*/
+
+-- But let's say we started with one relation:
+
+create table R (
+  sid int,
+  sname varchar(30),
+  major varchar(15),
+  year int,
+  cnum int,
+  cname varchar(20),
+  dept varchar(15),
+  grade varchar(2),
+  );
+
+/* We still have the same FDs:
+
+sid        ->  sname, major, year
+cnum       ->  cname, dept
+sid, cnum  ->  grade
+
+but since have no keys, the relation is in 3NF. To fix that, we need
+either to make the left sides superkeys or make sure the right sides
+are all prime attributes. For example, looking at the last FD, we can
+either make {sid,cnum} a superkey or make sure {grade} is part of some
+key. The natural thing is to first focus on the left sides to
+determine the keys.
+
+To make sid a key of a relation, it needs to determine all the
+attributes in its relation. Clearly sid does not determine grade for
+example. So we need to split the big relation in smaller relations.
+
+R1: sid        ->  sname, major, year
+R2: cnum       ->  cname, dept
+R3: sid, cnum  ->  grade
+
+In this case, the split is obvious, but sometimes the split can lose
+information. What we need is an additional condition called the
+"lossless join" condition. This says that if you split R into R1 and
+R2 then you can recover R by joining R1 and R2. Furthermore, we want
+to make sure that the FDs on R1 and R2 allow us to recover the FDs on
+R. This requirement is called "dependency-preservation."
+
+The following 3NF synthesis algorithm guarantees all the desired
+properties, i.e, it decomposes a relation into 3NF relations such that
+the decomposition has both a lossless join and the dependency-preservation
+property.
+
+*/
+
+-----------------------------------------------------------------------------
+-- Formal algorithm for 3NF synthesis with an example.
+
+/*
+
+We start with R(A,B,C,D,E) with FDs:
+
+   A B -> C
+   A C -> B D   
+   C   -> B
+   A   -> D
+
+Step 0: 
+
+     Calculate the keys for R. 
+       * First E does not appear anywhere in the right side so it 
+       	 would have to be included in any key
+       * Second D does not appear anywhere in the left side so it 
+         cannot determine any attributes so it can never be part 
+	 of a key
+       * So tentatively our key is {A,B,C,E}. The key needs to be 
+         minimal. So are there attributes that are redundant?
+       * Since A B -> C, we could remove C to get {A,B,E} as a key.
+       * Since C -> B, we could also remove B to get {A,C,E} as a key.
+
+Step I: Find a minimal basis
+
+     The idea is simple. Take the left side of one FD, close it using
+     the other FDs, and see if the right side is included in the
+     closure. 
+
+     Take A B and close it using the three FDs below it:
+     A B ->* A B D
+     The closure does not include C so the first FD does not follow from 
+     the others. Now try:
+     A C ->* A B C D
+     The right side is included in the closure so that FD can be removed.
+     We also check that:
+     C ->* C 
+     A ->* A
+     and the last two FDs also do not follow from the others. 
+
+     So far we have eliminated one FD, and we have:
+
+        A B -> C
+	C   -> B
+	A   -> D
+     
+
+     We still need to check that all the attributes in each left side are 
+     needed. Perhaps we don't need A in the first FD. So we check, like 
+     above, whether B -> C would follow from the other FDs. We find that
+     B ->* B
+     and hence B -> C does not follow. Similarly we check:
+     A ->* A D
+     and conclude that A -> C does not follow, and hence that B cannot 
+     be eliminted from the first FD. 
+
+     So our minimal FD set is:
+
+        A B -> C
+	C   -> B
+	A   -> D
+
+Step II: Define the following relations from the minimal set above:
+
+     R1 has schema A,B,C
+     R2 has schema B,C
+     R3 has schema A,D
+
+     R2 is clearly useless. Its schema is a subset of R1. Remove it. 
+     Our relations are now:
+
+     R1 with schema A,B,C
+     R3 with schema A,D
+
+Step III: 
+
+     Recall our keys: {A,B,E} and {A,C,E}. We need to check that the
+     schemas for our relations are superkeys. They are not. So we add
+     a relation with schema is a key (pick one):
+
+     R4 with schema A,B,E
+
+Result:
+
+     R1 with schema A,B,C
+     R3 with schema A,D
+     R4 with schema A,B,E
+
+Check: Need to decompose our global FDs to find the FDs for R1, R3, and R4:
+
+     For R1: Take the closure of all combinations of A,B,C
+     {A}*  -> A D
+     {B}*  -> B 
+     {C}*  -> B C
+     {AB}* -> A B C D
+     {AC}* -> A B C D 
+     {BC}* -> B C 
+     Get rid of trivial attributes on the right side and those not in A,B,C
+     {C}*  -> B
+     {AB}* -> C
+     {AC}* -> B
+     Result:
+	A B -> C
+	C   -> B
+	A C -> B
+     The last rule is redundant, so the final result is:
+	A B -> C
+	C   -> B
+
+     AB is a key for R1
+
+     Now we have R1(A,B,C) with key AB and FDs A B -> C and C -> B
+     We can check that the left side of the first FD is a key, and
+     the right side of the second FD is a prime attribute. Good!
+
+     For R3: Take the closure of all combinations of A,D
+     {A}*  -> A D
+     {D}*  -> D
+     {AD}* -> A D
+     Get rid of trivial attributes on the right side and those not in A,D.
+     Result:
+       A -> D
+     Since R3 has A as a key. It is in 3NF.
+
+     For R4: Take the closure of all combinations of A,B,E
+     {A}*  -> A D
+     {B}*  -> B 
+     {E}*  -> E
+     {AB}* -> A B C D
+     {AE}* -> A D E
+     {BE}* -> B E
+     Get rid of trivial attributes on the right side and those not in A,B,E
+     Result. No FDs
+     Hence R4 is trivially in 3NF.
+
+*/
+

@@ -1,0 +1,90 @@
+SQL
+	- CREATE TABLE
+	- INSERT TABLE
+	- SELECT TABLE
+
+	-Cleanup
+	-Complexty
+
+============================================================
+create table student (
+	id int not null,
+	sname varchar(30),
+	major varchar(15),
+	byear int,
+	primary key (id)
+	);
+create table course {
+	cno int,
+	cname varchar(20),
+	dept varchar(15),
+	primary key (cno)
+	};
+create table enroll (
+	id int,
+	cnd int,
+	grade varchar(2)
+	primary key(id, cno),
+	foreign key (id) references student(id) on delete cascade,
+	foregin key (cno) references course (cno) on delete restrict
+);
+
+============================================================
+select sname from student where major ='cs'
+sname
+---------------
+john
+eric      
+
+select S.sname as "CS majors" from student S where S.major = 'cs';
+CS majors
+-----------------
+john
+eric
+
+select S.name as "name", C.name as "course"
+from student S, course C, enroll E
+where S.id = E.id and C.cno = E.cno and E.grade = 'b';
+name | course
+-----------------------
+john	dbs
+ellen	calc2
+
+select E.id, E.cno from enroll E where E.grade = 'b';
+id | cno
+--------------
+1         1
+2         3
+
+(select s.major from student s) union (select s.major from student s);
+major
+---------------
+biology
+math
+cs -> random decision to pick up the data
+
+select distinct s.sname
+from student s, enroll e1, enroll e2
+where s.id = e1.id and s.id = e2.id and e1.cno <> e2.cno;
+sname
+------------
+eric
+john
+
+select s.id, s.name from student s where s.major = 'cs' or s.major = 'math';
+id | sname
+============
+1     john
+2     ellen
+3     eric
+
+(select s.id, sname from student s where s.major = 'cs' ) union (select s.id, s.name from student s where s. major = 'math');
+id | sname
+3     eric
+2     ellen
+1     john
+
+select e.id from enroll e where e.cno = 1 and e.cno = 2;
+id
+--------------
+

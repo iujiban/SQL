@@ -1,0 +1,83 @@
+cmd 
+
+
+
+create table X (a int, b int); //Create Table
+
+/dt  // Showing the List of relations
+
+insert into x values (0,1); //Insert 0 1
+column | Type | collation | Nullable | Default
+-----------------------------------------------------------------
+a	Integer
+b	Integer
+
+insert into x values (89997, NULL); // If the value is out of range integers, it does not qualify.
+
+select * from x; select the x value what inserted
+a | b
+--------
+0 | 1
+
+select b from x // only selected from the specific b columns == 1
+
+select b from x where a = 3; // select from the b from where exist at a =3
+
+create table sustdent (
+sid int,
+sname varchar(30),
+major varchar(15),
+byear int);
+\dt  : showing the table
+Schema | Name | 	TYPE | 	Owner
+----------------------------------------------
+public	student 	table	sabry
+public	x	table	sabry
+
+\d student : showing what table inserted
+Column|	Type	|Collation		|nULLABLE	|Default
+sid	Integer
+sname	character varying(30)
+major	character varying(15)
+byear	Integer
+
+create table course(
+cno int,
+cname varchar(20),
+dept varchar(15)
+);
+create table enroll (
+sid int,
+cno int,
+grade varchar(2)
+primary key (sid) // what is the primary key?
+foregin key (sid) references student (sid) on delete cascade, // you cannot add data which is already existed from other data
+foregin key (cno) references course (cno) on delete restrict
+);
+
+insert into student values (1,
+insert into course values (1, 'dbs', 'cs');
+insert into enroll values (1,1,'b');
+
+Quiz
+Students - snd, sname, year, major
+Course- cno, cname, dept
+Enroll - sid, cno, grade
+
+Students majoring in CS
+select sid, sname from student where major = 'cs';
+
+Pairs of student id and course cno where the student received a B in the course
+Select (sid, cno) from enroll where grade = 'b'
+-select student.sid,cno
+from student, enroll
+where student.sid =  enroll.sid and grade = 'b';
+
+Students who received a B in same course
+select sname from student where sid in (select enroll.sid
+				from enroll
+				where grade = 'b')
+Students who never received on A in any course
+(select enroll.sid from enroll)
+except
+(select enroll.sid from enroll where enroll.grade = 'a');
